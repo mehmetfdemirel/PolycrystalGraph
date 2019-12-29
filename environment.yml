@@ -2,7 +2,6 @@ name: matscienv
 channels:
   - pytorch
   - anaconda
-  - https://public.dhe.ibm.com/ibmdl/export/pub/software/server/ibm-ai/conda/
   - conda-forge
   - defaults
 dependencies:
@@ -40,5 +39,3 @@ dependencies:
   - wheel=0.33.6=py37_0
   - xz=5.2.4=h14c3975_4
   - zlib=1.2.11=h7b6447c_3
-prefix: /srv/home/demirel/.conda/envs/matscienv
-
