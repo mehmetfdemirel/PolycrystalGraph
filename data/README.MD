@@ -1,7 +1,7 @@
-# 09/01/2019
-# Copyright @ Jiamian Hu's group
-# Contact: Minyi Dai (mdai26@wisc.edu)
-## This file inroduces detailed information of the datasets.
+## 09/01/2019
+## Copyright @ Jiamian Hu's group
+## Contact: Minyi Dai (mdai26@wisc.edu)
+### This file inroduces detailed information of the datasets.
 ------------------------------------------------------------------
 
 The datasets now have 350 data points. The information of each data point are all included in the corresponding subfolder. 
