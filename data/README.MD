@@ -35,4 +35,4 @@ Obviously, this matrix is symmetric. Also, all diagonal elements is zero.
 Column1: applied magnetic field (kA/m)
 Column2: strain (unitless)
 
-For propert.txt in subfolder from structure-1 to structure-100, it has 4 rows. For file in other subfolder, it has 5 rows.
+For propertY.txt in subfolder from structure-1 to structure-100, it has 4 rows. For file in other subfolder, it has 5 rows.
