@@ -61,9 +61,9 @@ class GraphModel(nn.Module):
 
         self.fully_connected = nn.Sequential(
             nn.Linear(self.max_node_num * self.latent_dim + 1, 1),
-            # nn.Linear(1024, 256),
-            # nn.Linear(256, 64),
-            # nn.Linear(64, 1)
+            #nn.Linear(1024, 256),
+            #nn.Linear(256, 64),
+            #nn.Linear(64, 1)
         )
 
         return
@@ -107,8 +107,8 @@ def train(model, data_loader):
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
         loss = criterion(y_pred, label_matrix)
-        loss1 = MacroAvgRelErr(y_pred, label_matrix)
-        total_loss += loss1.data
+        total_loss += MacroAvgRelErr(y_pred, label_matrix) #loss.data
+
         loss.backward()
         optimizer.step()
 
@@ -139,7 +139,7 @@ def test(model, data_loader, fold, test_or_tr, printcond):
         label_matrix = tensor_to_variable(label_matrix)
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
-        total_loss += MacroAvgRelErr(y_pred, label_matrix)
+        total_loss += MacroAvgRelErr(y_pred, label_matrix) #criterion(y_pred, label_matrix)
 
         y_label_list.extend(variable_to_numpy(label_matrix))
         y_pred_list.extend(variable_to_numpy(y_pred))
@@ -181,9 +181,9 @@ if __name__ == '__main__':
     parser.add_argument('--latent_dim', type=int, default=50)
 
     parser.add_argument('--epoch', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
-    parser.add_argument('--min_learning_rate', type=float, default=1e-7)
+    parser.add_argument('--min_learning_rate', type=float, default=1e-5)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--checkpoint', type=str, default='checkpoints/model/')
     given_args = parser.parse_args()
@@ -213,6 +213,7 @@ if __name__ == '__main__':
     import train_data
 
     dataset = train_data.GraphDataSet_Adjacent()
+
 
     num_of_data = dataset.__len__()
     indices = list(range(num_of_data))
@@ -273,3 +274,4 @@ if __name__ == '__main__':
 
     # print('*********************************************************')
     # test(model, full_training, -1, True)
+
