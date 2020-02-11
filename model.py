@@ -49,18 +49,21 @@ class GraphModel(nn.Module):
         self.atom_attr_dim = atom_attr_dim
         self.latent_dim = latent_dim
 
+
         self.graph_modules = nn.Sequential(OrderedDict([
             ('message_passing_0', Message_Passing()),
-            ('dense_0', nn.Linear(self.atom_attr_dim, 20)),
+            ('dense_0', nn.Linear(self.atom_attr_dim, 50)),
             ('activation_0', nn.Sigmoid()),
             ('message_passing_1', Message_Passing()),
-            ('dense_1', nn.Linear(20, self.latent_dim)),
+            ('dense_1', nn.Linear(50, self.latent_dim)),
             ('activation_1', nn.Sigmoid()),
         ]))
 
         self.fully_connected = nn.Sequential(
-            nn.Linear(self.max_node_num * self.latent_dim + 1, 10),
-            nn.Linear(10, 1),
+            nn.Linear(self.max_node_num * self.latent_dim + 1, 1),
+            # nn.Linear(1024, 256),
+            # nn.Linear(256, 64),
+            # nn.Linear(64, 1)
         )
 
         return
@@ -99,21 +102,27 @@ def train(model, data_loader):
         node_attr_matrix = tensor_to_variable(node_attr_matrix)
         t_matrix = tensor_to_variable(t_matrix)
         label_matrix = tensor_to_variable(label_matrix)
+
         optimizer.zero_grad()
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
         loss = criterion(y_pred, label_matrix)
-        total_loss += loss.data
+        loss1 = MacroAvgRelErr(y_pred, label_matrix)
+        total_loss += loss1.data
         loss.backward()
         optimizer.step()
 
-    total_loss /= len(data_loader.dataset)
+    total_loss /= len(data_loader.sampler)
     return total_loss
 
 
-def MSE(X, Y):
-    return np.mean((X - Y) ** 2)
+def MSE(Y_prime, Y):
+    return np.mean((Y_prime - Y) ** 2)
 
+def MacroAvgRelErr(Y_prime, Y):
+    if type(Y_prime) is np.ndarray:
+        return np.abs(np.sum((Y - Y_prime)) / np.sum(Y))
+    return torch.abs(torch.sum(Y - Y_prime) / torch.sum(Y))
 
 def test(model, data_loader, fold, test_or_tr, printcond):
     model.eval()
@@ -122,6 +131,7 @@ def test(model, data_loader, fold, test_or_tr, printcond):
 
     y_label_list = []
     y_pred_list = []
+    total_loss = 0
     for batch_id, (adjacency_matrix, node_attr_matrix, t_matrix, label_matrix) in enumerate(data_loader):
         adjacency_matrix = tensor_to_variable(adjacency_matrix)
         node_attr_matrix = tensor_to_variable(node_attr_matrix)
@@ -129,19 +139,18 @@ def test(model, data_loader, fold, test_or_tr, printcond):
         label_matrix = tensor_to_variable(label_matrix)
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
+        total_loss += MacroAvgRelErr(y_pred, label_matrix)
 
         y_label_list.extend(variable_to_numpy(label_matrix))
         y_pred_list.extend(variable_to_numpy(y_pred))
+
+    total_loss /= len(data_loader.sampler)
 
     normalization = np.loadtxt('normalization.in')
     label_mean = normalization[0]
     label_std = normalization[1]
 
-    # print(label_mean)
-    # print(label_std)
-
     y_label_list = np.array(y_label_list) * label_std + label_mean
-    # y_label_list = y_label_list - np.min(y_label_list)
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
 
     length, w = np.shape(y_label_list)
@@ -154,41 +163,51 @@ def test(model, data_loader, fold, test_or_tr, printcond):
         for i in range(0, length):
             print('True:{}, Predicted: {}'.format(y_label_list[i], y_pred_list[i]))
 
-    # print(y_pred_list)
-    # print('----------')
-    # print(np.linalg.norm(y_label_list))
-
-    mse_value = MSE(y_pred_list, y_label_list)
     if printcond:
         print(' ')
-        print('MSE value: {}'.format(mse_value))
+        print('Macro Averaged Error: {}'.format(total_loss))
         if fold != -1:
-            print('Fold {} {} MSE value: {}'.format(fold, test_or_tr, mse_value))
+            print('Fold {} {} Macro Averaged Error: {}'.format(fold, test_or_tr, total_loss))
 
-    return mse_value
+    return total_loss
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--max_node_num', type=int, default=298)
+    parser.add_argument('--max_node_num', type=int, default=737)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
     parser.add_argument('--latent_dim', type=int, default=50)
 
     parser.add_argument('--epoch', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=10)
-    parser.add_argument('--learning_rate', type=float, default=5e-4)
-    parser.add_argument('--min_learning_rate', type=float, default=1e-4)
+    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--learning_rate', type=float, default=1e-4)
+    parser.add_argument('--min_learning_rate', type=float, default=1e-7)
     parser.add_argument('--seed', type=int, default=123)
+    parser.add_argument('--checkpoint', type=str, default='checkpoints/model/')
     given_args = parser.parse_args()
 
     epochs = given_args.epoch
     max_node_num = given_args.max_node_num
     atom_attr_dim = given_args.atom_attr_dim
     latent_dim = given_args.latent_dim
+    checkpoint_dir = given_args.checkpoint
+
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
 
     torch.manual_seed(given_args.seed)
+
+    # Define the model
+    model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
+    if torch.cuda.is_available():
+        model.cuda()
+
+    optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
+                                                     min_lr=given_args.min_learning_rate, verbose=True)
+    criterion = nn.MSELoss()
 
     # Specify data
     import train_data
@@ -205,18 +224,19 @@ if __name__ == '__main__':
     ftrain = open("training_losses.txt", "w+")
     ftest = open("test_losses.txt", "w+")
     for fold in range(0, split_fold):
+        model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
+        if torch.cuda.is_available():
+            model.cuda()
+
         print('')
         print('FOLD {} OF {} STARTED!'.format(fold + 1, split_fold))
-        # ftrain.write('FOLD {} OF {} STARTED!\n'.format(fold + 1, split_fold))
-        # ftest.write('FOLD {} OF {} STARTED!\n'.format(fold + 1, split_fold))
+
         if fold != split_fold - 1:
             test_indices = indices[fold * each_bin:fold * each_bin + each_bin]
-
         else:
             test_indices = indices[fold * each_bin:num_of_data - 1]
 
         train_indices = [idx for idx in indices if idx not in test_indices]
-
         train_sampler = SubsetRandomSampler(train_indices)
         test_sampler = SubsetRandomSampler(test_indices)
 
@@ -224,19 +244,10 @@ if __name__ == '__main__':
         test_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, sampler=test_sampler)
         full_training = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, shuffle=True)
 
-        # Train the model
-        model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
-        if torch.cuda.is_available():
-            model.cuda()
-
-        optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
-                                                         min_lr=given_args.min_learning_rate, verbose=True)
-        criterion = nn.MSELoss()
-
         for epoch in range(given_args.epoch):
             print('Epoch: {}'.format(epoch))
-
+            if epoch % 10 == 0:
+                torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
             train_start_time = time.time()
             train_loss = train(model, train_dataloader)
             ftrain.write('{}\n'.format(train_loss))
