@@ -247,6 +247,7 @@ if __name__ == '__main__':
             print('Epoch: {}'.format(epoch))
             if epoch % (epochs / 10) == 0:
                 torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
+                print('Model saved.')
             train_start_time = time.time()
             train_loss = train(model, train_dataloader)
             ftrain.write('{}\n'.format(train_loss))
