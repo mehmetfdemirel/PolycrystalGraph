@@ -214,7 +214,6 @@ if __name__ == '__main__':
 
     dataset = train_data.GraphDataSet_Adjacent()
 
-
     num_of_data = dataset.__len__()
     indices = list(range(num_of_data))
     np.random.shuffle(indices)
@@ -226,6 +225,12 @@ if __name__ == '__main__':
     ftest = open("test_losses.txt", "w+")
     for fold in range(0, split_fold):
         model.__init__(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
+        if torch.cuda.is_available():
+            model.cuda()
+
+        optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
+                                                         min_lr=given_args.min_learning_rate, verbose=True)
 
         print('')
         print('FOLD {} OF {} STARTED!'.format(fold + 1, split_fold))
