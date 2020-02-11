@@ -180,7 +180,7 @@ if __name__ == '__main__':
     parser.add_argument('--atom_attr_dim', type=int, default=5)
     parser.add_argument('--latent_dim', type=int, default=50)
 
-    parser.add_argument('--epoch', type=int, default=10)
+    parser.add_argument('--epoch', type=int, default=3)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--min_learning_rate', type=float, default=1e-5)
@@ -245,7 +245,7 @@ if __name__ == '__main__':
 
         for epoch in range(epochs):
             print('Epoch: {}'.format(epoch))
-            if epoch % (epochs / 10) == 0:
+            if epoch % (epochs / 10) == 0 or epoch == epochs-1:
                 torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
                 print('Model saved.')
             train_start_time = time.time()
