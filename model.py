@@ -243,9 +243,9 @@ if __name__ == '__main__':
         test_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, sampler=test_sampler)
         full_training = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, shuffle=True)
 
-        for epoch in range(given_args.epoch):
+        for epoch in range(epochs):
             print('Epoch: {}'.format(epoch))
-            if epoch % 10 == 0:
+            if epoch % (epochs / 10) == 0:
                 torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
             train_start_time = time.time()
             train_loss = train(model, train_dataloader)
