@@ -225,9 +225,7 @@ if __name__ == '__main__':
     ftrain = open("training_losses.txt", "w+")
     ftest = open("test_losses.txt", "w+")
     for fold in range(0, split_fold):
-        model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
-        if torch.cuda.is_available():
-            model.cuda()
+        model.__init__(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
 
         print('')
         print('FOLD {} OF {} STARTED!'.format(fold + 1, split_fold))
