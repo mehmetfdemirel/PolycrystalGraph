@@ -150,9 +150,9 @@ def test(model, data_loader, test_or_tr, printcond):
 
     total_loss = np.mean(total_loss)
 
-    normalization = np.loadtxt('normalization.in')
-    label_mean = normalization[0]
-    label_std = normalization[1]
+    norm = np.load('data/norm.npz', allow_pickle=True)['norm']
+    label_mean = norm[0]
+    label_std = norm[1]
 
     y_label_list = np.array(y_label_list) * label_std + label_mean
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='checkpoints/')
     parser.add_argument('--running_index', type=int, default=0)
     parser.add_argument('--folds', type=int, default=10)
-    parser.add_argument('--idx_path', type=str, default='indices.npz')
+    parser.add_argument('--idx_path', type=str, default='data/indices.npz')
     given_args = parser.parse_args()
     epochs = given_args.epochs
     max_node_num = given_args.max_node_num

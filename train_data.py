@@ -63,19 +63,15 @@ class GraphDataSet(Dataset):
                 label_matrix = np.concatenate((label_matrix, label))
 
         # normalize the independent variable t matrix
-        # t_matrix = (t_matrix - np.mean(t_matrix)) / np.std(t_matrix)
         t_matrix = t_matrix / 10000
 
-        # print(np.linalg.norm(label_matrix))
-        # print('-------')
         # normalize the label matrix
         label_mean = np.mean(label_matrix)
         label_std = np.std(label_matrix)
         label_matrix = (label_matrix - label_mean) / label_std
 
-        f = open("normalization.in", "w+")
-        f.write('{} {}'.format(label_mean, label_std))
-        f.close()
+        norm = np.array([label_mean, label_std])
+        np.savez_compressed('data/norm.npz', norm=norm)
 
         self.adjacency_matrix = np.array(adjacency_matrix)
         self.node_attr_matrix = np.array(node_attr_matrix)
