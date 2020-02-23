@@ -30,4 +30,4 @@ if __name__ == '__main__':
     indices = split_data()
     extract_graph_data(out_file_path, indices = indices)
 
-    print("Data Successfully Split into {} Folds!".format(num_folds))
+    print("Data successfully split into {} folds!".format(num_folds))
