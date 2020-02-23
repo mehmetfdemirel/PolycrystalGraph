@@ -102,7 +102,8 @@ def train(model, data_loader):
     print()
 
     for epoch in range(epochs):
-        train_loss = []
+        total_macro_loss = []
+        total_mse_loss = []
         if epoch % (epochs / 10) == 0 or epoch == epochs-1:
             torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
             print('Epoch: {}, Checkpoint saved!'.format(epoch))
@@ -121,25 +122,25 @@ def train(model, data_loader):
 
             y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
             loss = criterion(y_pred, label_matrix)
+            total_macro_loss.append(macro_avg_err(y_pred, label_matrix).item())
+            total_mse_loss.append((loss.item()))
             loss.backward()
             optimizer.step()
-            train_loss.append(MacroAvgRelErr(y_pred, label_matrix).item())
 
-        train_loss = np.mean(train_loss)
-        scheduler.step(train_loss)
+        total_macro_loss = np.mean(total_macro_loss)
+        total_mse_loss = np.mean(total_mse_loss)
+        scheduler.step(total_mse_loss)
         train_end_time = time.time()
-        test_loss = test(model, test_dataloader, 'Test', False)
+        test_loss_epoch = test(model, test_dataloader, 'Test', False)
         print('Train time: {:.3f}s. Training loss is {}. Test loss is {}'.format(train_end_time - train_start_time,
-                                                                                 train_loss, test_loss))
+                                                                                 total_macro_loss, test_loss_epoch))
 
 def test(model, data_loader, test_or_tr, printcond):
     model.eval()
     if data_loader is None:
         return None, None
 
-    y_label_list = []
-    y_pred_list = []
-    total_loss = []
+    y_label_list, y_pred_list, total_loss = [], [], []
 
     for batch_id, (adjacency_matrix, node_attr_matrix, t_matrix, label_matrix) in enumerate(data_loader):
         adjacency_matrix = tensor_to_variable(adjacency_matrix)
@@ -148,7 +149,7 @@ def test(model, data_loader, test_or_tr, printcond):
         label_matrix = tensor_to_variable(label_matrix)
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
-        total_loss.append(MacroAvgRelErr(y_pred, label_matrix).item())
+        total_loss.append(macro_avg_err(y_pred, label_matrix).item())
 
         y_label_list.extend(variable_to_numpy(label_matrix))
         y_pred_list.extend(variable_to_numpy(y_pred))
@@ -156,8 +157,7 @@ def test(model, data_loader, test_or_tr, printcond):
     total_loss = np.mean(total_loss)
 
     norm = np.load('data/norm.npz', allow_pickle=True)['norm']
-    label_mean = norm[0]
-    label_std = norm[1]
+    label_mean, label_std = norm[0], norm[1]
 
     y_label_list = np.array(y_label_list) * label_std + label_mean
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
@@ -178,17 +178,17 @@ def get_data():
     train_idx = [item for sublist in train_idx for item in sublist]
 
     dataset = GraphDataSet()
-    train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
+    train_data = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
                                                    sampler=SubsetRandomSampler(train_idx))
-    test_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
+    test_data = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
                                                   sampler=SubsetRandomSampler(test_idx))
 
-    return train_dataloader, test_dataloader
+    return train_data, test_data
 
-def MSE(Y_prime, Y):
+def mse(Y_prime, Y):
     return np.mean((Y_prime - Y) ** 2)
 
-def MacroAvgRelErr(Y_prime, Y):
+def macro_avg_err(Y_prime, Y):
     if type(Y_prime) is np.ndarray:
         return np.abs(np.sum((Y - Y_prime)) / np.sum(Y))
     return torch.abs(torch.sum(Y - Y_prime) / torch.sum(Y))
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_node_num', type=int, default=737)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
     parser.add_argument('--latent_dim', type=int, default=50)
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=3)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--min_learning_rate', type=float, default=1e-5)
