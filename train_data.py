@@ -5,13 +5,13 @@ import torch
 from torch.utils.data import Dataset
 from scipy import sparse
 
-class GraphDataSet_Adjacent(Dataset):
+class GraphDataSet(Dataset):
     def __init__(self):
 
         max_node = 737
         features = 5
 
-        for i in range(1, 350):
+        for i in range(1, 500):
             # load files
             neighbor_file_path = 'data/structure-{}/neighbor.txt'.format(i)
             feature_file_path = 'data/structure-{}/feature.txt'.format(i)
