@@ -97,12 +97,17 @@ def train(model, data_loader):
     criterion = nn.MSELoss()
     model.train()
 
+    print()
+    print("*** Training started! ***")
+    print()
+
     for epoch in range(epochs):
         train_loss = []
-        print('Epoch: {}'.format(epoch))
         if epoch % (epochs / 10) == 0 or epoch == epochs-1:
             torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
-            print('Model saved.')
+            print('Epoch: {}, Checkpoint saved!'.format(epoch))
+        else:
+            print('Epoch: {}'.format(epoch))
 
         train_start_time = time.time()
 
@@ -172,9 +177,10 @@ def get_data():
     train_idx = indices[[i for i in range(folds) if i != running_index]]
     train_idx = [item for sublist in train_idx for item in sublist]
 
-    train_dataloader = torch.utils.data.DataLoader(GraphDataSet(), batch_size=given_args.batch_size,
+    dataset = GraphDataSet()
+    train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
                                                    sampler=SubsetRandomSampler(train_idx))
-    test_dataloader = torch.utils.data.DataLoader(GraphDataSet(), batch_size=given_args.batch_size,
+    test_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
                                                   sampler=SubsetRandomSampler(test_idx))
 
     return train_dataloader, test_dataloader
@@ -224,8 +230,6 @@ if __name__ == '__main__':
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
                                                      min_lr=given_args.min_learning_rate, verbose=True)
 
-    print('*********************************************************')
-
     # get the data
     train_dataloader, test_dataloader = get_data()
 
@@ -237,7 +241,7 @@ if __name__ == '__main__':
     train_loss = test(model, train_dataloader, 'Training', True)
 
     print()
-    print('*********************************************************')
+    print('--------------------')
     print()
     print("Test Error: {}".format(test_loss))
     print("Training Error: {}".format(train_loss))

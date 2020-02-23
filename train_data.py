@@ -7,7 +7,6 @@ from scipy import sparse
 
 class GraphDataSet(Dataset):
     def __init__(self):
-
         max_node = 737
         features = 5
 
