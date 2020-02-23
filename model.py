@@ -17,7 +17,7 @@ from torch.autograd import Variable
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
-
+from train_data import GraphDataSet
 
 def tensor_to_variable(x):
     if torch.cuda.is_available():
@@ -94,44 +94,54 @@ class GraphModel(nn.Module):
 
 
 def train(model, data_loader):
+    criterion = nn.MSELoss()
     model.train()
 
-    total_loss = 0
-    for batch_id, (adjacency_matrix, node_attr_matrix, t_matrix, label_matrix) in enumerate(data_loader):
-        adjacency_matrix = tensor_to_variable(adjacency_matrix)
-        node_attr_matrix = tensor_to_variable(node_attr_matrix)
-        t_matrix = tensor_to_variable(t_matrix)
-        label_matrix = tensor_to_variable(label_matrix)
+    print()
+    print("*** Training started! ***")
+    print()
 
-        optimizer.zero_grad()
+    for epoch in range(epochs):
+        total_macro_loss = []
+        total_mse_loss = []
+        if epoch % (epochs / 10) == 0 or epoch == epochs-1:
+            torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
+            print('Epoch: {}, Checkpoint saved!'.format(epoch))
+        else:
+            print('Epoch: {}'.format(epoch))
 
-        y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
-        loss = criterion(y_pred, label_matrix)
-        total_loss += MacroAvgRelErr(y_pred, label_matrix) #loss.data
+        train_start_time = time.time()
 
-        loss.backward()
-        optimizer.step()
+        for batch_id, (adjacency_matrix, node_attr_matrix, t_matrix, label_matrix) in enumerate(data_loader):
+            adjacency_matrix = tensor_to_variable(adjacency_matrix)
+            node_attr_matrix = tensor_to_variable(node_attr_matrix)
+            t_matrix = tensor_to_variable(t_matrix)
+            label_matrix = tensor_to_variable(label_matrix)
 
-    total_loss /= len(data_loader.sampler)
-    return total_loss
+            optimizer.zero_grad()
 
+            y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
+            loss = criterion(y_pred, label_matrix)
+            total_macro_loss.append(macro_avg_err(y_pred, label_matrix).item())
+            total_mse_loss.append((loss.item()))
+            loss.backward()
+            optimizer.step()
 
-def MSE(Y_prime, Y):
-    return np.mean((Y_prime - Y) ** 2)
+        total_macro_loss = np.mean(total_macro_loss)
+        total_mse_loss = np.mean(total_mse_loss)
+        scheduler.step(total_mse_loss)
+        train_end_time = time.time()
+        test_loss_epoch = test(model, test_dataloader, 'Test', False)
+        print('Train time: {:.3f}s. Training loss is {}. Test loss is {}'.format(train_end_time - train_start_time,
+                                                                                 total_macro_loss, test_loss_epoch))
 
-def MacroAvgRelErr(Y_prime, Y):
-    if type(Y_prime) is np.ndarray:
-        return np.abs(np.sum((Y - Y_prime)) / np.sum(Y))
-    return torch.abs(torch.sum(Y - Y_prime) / torch.sum(Y))
-
-def test(model, data_loader, fold, test_or_tr, printcond):
+def test(model, data_loader, test_or_tr, printcond):
     model.eval()
     if data_loader is None:
         return None, None
 
-    y_label_list = []
-    y_pred_list = []
-    total_loss = 0
+    y_label_list, y_pred_list, total_loss = [], [], []
+
     for batch_id, (adjacency_matrix, node_attr_matrix, t_matrix, label_matrix) in enumerate(data_loader):
         adjacency_matrix = tensor_to_variable(adjacency_matrix)
         node_attr_matrix = tensor_to_variable(node_attr_matrix)
@@ -139,60 +149,73 @@ def test(model, data_loader, fold, test_or_tr, printcond):
         label_matrix = tensor_to_variable(label_matrix)
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
-        total_loss += MacroAvgRelErr(y_pred, label_matrix) #criterion(y_pred, label_matrix)
+        total_loss.append(macro_avg_err(y_pred, label_matrix).item())
 
         y_label_list.extend(variable_to_numpy(label_matrix))
         y_pred_list.extend(variable_to_numpy(y_pred))
 
-    total_loss /= len(data_loader.sampler)
+    total_loss = np.mean(total_loss)
 
-    normalization = np.loadtxt('normalization.in')
-    label_mean = normalization[0]
-    label_std = normalization[1]
+    norm = np.load('data/norm.npz', allow_pickle=True)['norm']
+    label_mean, label_std = norm[0], norm[1]
 
     y_label_list = np.array(y_label_list) * label_std + label_mean
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
 
     length, w = np.shape(y_label_list)
     if printcond:
-        print('')
-        if fold != -1:
-            print('Fold {} {} Predictions: '.format(fold, test_or_tr))
-        else:
-            print('Predictions on the Entire Training Set:')
+        print()
+        print('{} Set Predictions: '.format(test_or_tr))
         for i in range(0, length):
             print('True:{}, Predicted: {}'.format(y_label_list[i], y_pred_list[i]))
 
-    if printcond:
-        print(' ')
-        print('Macro Averaged Error: {}'.format(total_loss))
-        if fold != -1:
-            print('Fold {} {} Macro Averaged Error: {}'.format(fold, test_or_tr, total_loss))
-
     return total_loss
 
+def get_data():
+    indices = np.load(idx_path, allow_pickle=True)['indices']
+    test_idx = indices[running_index]
+    train_idx = indices[[i for i in range(folds) if i != running_index]]
+    train_idx = [item for sublist in train_idx for item in sublist]
+
+    dataset = GraphDataSet()
+    train_data = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
+                                                   sampler=SubsetRandomSampler(train_idx))
+    test_data = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
+                                                  sampler=SubsetRandomSampler(test_idx))
+
+    return train_data, test_data
+
+def mse(Y_prime, Y):
+    return np.mean((Y_prime - Y) ** 2)
+
+def macro_avg_err(Y_prime, Y):
+    if type(Y_prime) is np.ndarray:
+        return np.abs(np.sum((Y - Y_prime)) / np.sum(Y))
+    return torch.abs(torch.sum(Y - Y_prime) / torch.sum(Y))
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
-
     parser.add_argument('--max_node_num', type=int, default=737)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
     parser.add_argument('--latent_dim', type=int, default=50)
-
-    parser.add_argument('--epoch', type=int, default=3)
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--min_learning_rate', type=float, default=1e-5)
     parser.add_argument('--seed', type=int, default=123)
-    parser.add_argument('--checkpoint', type=str, default='checkpoints/model/')
+    parser.add_argument('--checkpoint', type=str, default='checkpoints/')
+    parser.add_argument('--running_index', type=int, default=0)
+    parser.add_argument('--folds', type=int, default=10)
+    parser.add_argument('--idx_path', type=str, default='data/indices.npz')
     given_args = parser.parse_args()
-
-    epochs = given_args.epoch
+    epochs = given_args.epochs
     max_node_num = given_args.max_node_num
     atom_attr_dim = given_args.atom_attr_dim
     latent_dim = given_args.latent_dim
     checkpoint_dir = given_args.checkpoint
+    running_index = given_args.running_index
+    idx_path = given_args.idx_path
+    folds = given_args.folds
 
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
@@ -203,79 +226,23 @@ if __name__ == '__main__':
     model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
     if torch.cuda.is_available():
         model.cuda()
-
     optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
                                                      min_lr=given_args.min_learning_rate, verbose=True)
-    criterion = nn.MSELoss()
 
-    # Specify data
-    import train_data
+    # get the data
+    train_dataloader, test_dataloader = get_data()
 
-    dataset = train_data.GraphDataSet_Adjacent()
+    # train the mode
+    train(model, train_dataloader)
 
-    num_of_data = dataset.__len__()
-    indices = list(range(num_of_data))
-    np.random.shuffle(indices)
-    split_fold = 5
-    each_bin = num_of_data // split_fold
-    print('*********************************************************')
-    sum_mse = 0
-    ftrain = open("training_losses.txt", "w+")
-    ftest = open("test_losses.txt", "w+")
-    for fold in range(0, split_fold):
-        model.__init__(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
-        if torch.cuda.is_available():
-            model.cuda()
+    # predictions on the entire test and training datasets
+    test_loss = test(model, test_dataloader, 'Test', True)
+    train_loss = test(model, train_dataloader, 'Training', True)
 
-        optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
-                                                         min_lr=given_args.min_learning_rate, verbose=True)
-
-        print('')
-        print('FOLD {} OF {} STARTED!'.format(fold + 1, split_fold))
-
-        if fold != split_fold - 1:
-            test_indices = indices[fold * each_bin:fold * each_bin + each_bin]
-        else:
-            test_indices = indices[fold * each_bin:num_of_data - 1]
-
-        train_indices = [idx for idx in indices if idx not in test_indices]
-        train_sampler = SubsetRandomSampler(train_indices)
-        test_sampler = SubsetRandomSampler(test_indices)
-
-        train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, sampler=train_sampler)
-        test_dataloader = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, sampler=test_sampler)
-        full_training = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size, shuffle=True)
-
-        for epoch in range(epochs):
-            print('Epoch: {}'.format(epoch))
-            if epoch % (epochs / 10) == 0 or epoch == epochs-1:
-                torch.save(model.state_dict(), '{}/checkpoint_{}.pth'.format(checkpoint_dir, epoch))
-                print('Model saved.')
-            train_start_time = time.time()
-            train_loss = train(model, train_dataloader)
-            ftrain.write('{}\n'.format(train_loss))
-            scheduler.step(train_loss)
-            train_end_time = time.time()
-            test_loss = test(model, test_dataloader, fold + 1, 'Test', False)
-            print('Train time: {:.3f}s. Training loss is {}. Test loss is {}'.format(train_end_time - train_start_time,
-                                                                                     train_loss, test_loss))
-            ftest.write('{}\n'.format(test_loss))
-
-        mse = test(model, test_dataloader, fold + 1, 'Test', True)
-        test(model, train_dataloader, fold + 1, 'Training', True)
-        sum_mse = sum_mse + mse
-        print('FOLD {} OF {} COMPLETED!'.format(fold + 1, split_fold))
-        print('*********************************************************')
-        ftrain.write('*\n')
-        ftest.write('*\n')
-    print('')
-    print('TRAINING ENDED!')
-    print('Average MSE across {} folds is {}.'.format(split_fold, sum_mse / split_fold))
-    ftrain.close()
-    ftest.close()
-
-    # print('*********************************************************')
-    # test(model, full_training, -1, True)
+    print()
+    print('--------------------')
+    print()
+    print("Test Error: {}".format(test_loss))
+    print("Training Error: {}".format(train_loss))
 
