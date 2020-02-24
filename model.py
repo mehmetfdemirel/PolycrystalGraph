@@ -140,7 +140,7 @@ def test(model, data_loader, test_or_tr, printcond):
     if data_loader is None:
         return None, None
 
-    y_label_list, y_pred_list, total_loss = [], [], []
+    y_label_list, y_pred_list, total_loss = [], [], 0
 
     for batch_id, (adjacency_matrix, node_attr_matrix, t_matrix, label_matrix) in enumerate(data_loader):
         adjacency_matrix = tensor_to_variable(adjacency_matrix)
@@ -149,18 +149,17 @@ def test(model, data_loader, test_or_tr, printcond):
         label_matrix = tensor_to_variable(label_matrix)
 
         y_pred = model(adjacency_matrix=adjacency_matrix, node_attr_matrix=node_attr_matrix, t_matrix=t_matrix)
-        total_loss.append(macro_avg_err(y_pred, label_matrix).item())
 
         y_label_list.extend(variable_to_numpy(label_matrix))
         y_pred_list.extend(variable_to_numpy(y_pred))
-
-    total_loss = np.mean(total_loss)
 
     norm = np.load('data/norm.npz', allow_pickle=True)['norm']
     label_mean, label_std = norm[0], norm[1]
 
     y_label_list = np.array(y_label_list) * label_std + label_mean
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
+
+    total_loss = macro_avg_err(y_pred_list, y_label_list)
 
     length, w = np.shape(y_label_list)
     if printcond:
