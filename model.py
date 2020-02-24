@@ -235,9 +235,9 @@ if __name__ == '__main__':
     # train the mode
     train(model, train_dataloader)
 
-    # predictions on the entire test and training datasets
-    test_loss = test(model, test_dataloader, 'Test', True)
+    # predictions on the entire training and test datasets
     train_loss = test(model, train_dataloader, 'Training', True)
+    test_loss = test(model, test_dataloader, 'Test', True)
 
     print()
     print('--------------------')
