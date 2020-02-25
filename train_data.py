@@ -7,14 +7,14 @@ from scipy import sparse
 
 class GraphDataSet(Dataset):
     def __init__(self):
-        max_node = 737
+        max_node = 300
         features = 5
 
-        for i in range(1, 500):
+        for i in range(1, 493):
             # load files
-            neighbor_file_path = 'data/structure-{}/neighbor.txt'.format(i)
-            feature_file_path = 'data/structure-{}/feature.txt'.format(i)
-            property_file_path = 'data/structure-{}/property.txt'.format(i)
+            neighbor_file_path = 'refined_data/structure-{}/neighbor.txt'.format(i)
+            feature_file_path = 'refined_data/structure-{}/feature.txt'.format(i)
+            property_file_path = 'refined_data/structure-{}/property.txt'.format(i)
             neighbor = np.loadtxt(neighbor_file_path)
             feature = np.loadtxt(feature_file_path)
             proprty = np.loadtxt(property_file_path)
