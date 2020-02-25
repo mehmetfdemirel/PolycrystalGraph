@@ -18,6 +18,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from train_data import GraphDataSet
+from captum.attr import IntegratedGradients
 
 def tensor_to_variable(x):
     if torch.cuda.is_available():
@@ -60,10 +61,13 @@ class GraphModel(nn.Module):
         ]))
 
         self.fully_connected = nn.Sequential(
-            nn.Linear(self.max_node_num * self.latent_dim + 1, 1),
-            #nn.Linear(1024, 256),
-            #nn.Linear(256, 64),
-            #nn.Linear(64, 1)
+            nn.Linear(self.max_node_num * self.latent_dim + 1, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 256),
+            nn.ReLU(),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1)
         )
 
         return
@@ -225,8 +229,8 @@ if __name__ == '__main__':
     model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
     if torch.cuda.is_available():
         model.cuda()
-    optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
+    optimizer = optim.Adam(model.parameters(), lr=given_args.learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20,
                                                      min_lr=given_args.min_learning_rate, verbose=True)
 
     # get the data
@@ -238,6 +242,12 @@ if __name__ == '__main__':
     # predictions on the entire training and test datasets
     train_loss = test(model, train_dataloader, 'Training', True)
     test_loss = test(model, test_dataloader, 'Test', True)
+
+    ig = IntegratedGradients(model)
+
+    # attributions, approximation_error = ig.attribute((input1, input2),
+    #                                                  method='gausslegendre',
+    #                                                  return_convergence_delta=True)
 
     print()
     print('--------------------')
