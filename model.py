@@ -61,8 +61,11 @@ class GraphModel(nn.Module):
 
         self.fully_connected = nn.Sequential(
             nn.Linear(self.max_node_num * self.latent_dim + 1, 1024),
+            nn.ReLU(),
             nn.Linear(1024, 256),
+            nn.ReLU(),
             nn.Linear(256, 64),
+            nn.ReLU(),
             nn.Linear(64, 1)
         )
 
@@ -199,8 +202,8 @@ if __name__ == '__main__':
     parser.add_argument('--latent_dim', type=int, default=100)
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--learning_rate', type=float, default=3e-4)
-    parser.add_argument('--min_learning_rate', type=float, default=1e-4)
+    parser.add_argument('--learning_rate', type=float, default=1e-4)
+    parser.add_argument('--min_learning_rate', type=float, default=1e-5)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--checkpoint', type=str, default='checkpoints/')
     parser.add_argument('--running_index', type=int, default=0)
@@ -225,8 +228,8 @@ if __name__ == '__main__':
     model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
     if torch.cuda.is_available():
         model.cuda()
-    optimizer = optim.SGD(model.parameters(), lr=given_args.learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50,
+    optimizer = optim.Adam(model.parameters(), lr=given_args.learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20,
                                                      min_lr=given_args.min_learning_rate, verbose=True)
 
     # get the data
