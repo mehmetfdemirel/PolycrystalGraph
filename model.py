@@ -135,8 +135,8 @@ def train(model, data_loader):
         scheduler.step(total_mse_loss)
         train_end_time = time.time()
         test_loss_epoch = test(model, test_dataloader, 'Test', False)
-        print('Train time: {:.3f}s. Training loss is {}. Test loss is {}'.format(train_end_time - train_start_time,
-                                                                                 total_macro_loss, test_loss_epoch))
+        print('Train time: {:.3f}s. Training MSE is {}. Test MSE is {}'.format(train_end_time - train_start_time,
+                                                                                 total_mse_loss, test_loss_epoch))
 
 def test(model, data_loader, test_or_tr, printcond):
     model.eval()
@@ -163,6 +163,7 @@ def test(model, data_loader, test_or_tr, printcond):
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
 
     total_loss = macro_avg_err(y_pred_list, y_label_list)
+    total_mse = criterion(y_pred_list, y_label_list))
 
     length, w = np.shape(y_label_list)
     if printcond:
@@ -171,7 +172,7 @@ def test(model, data_loader, test_or_tr, printcond):
         for i in range(0, length):
             print('True:{}, Predicted: {}'.format(y_label_list[i], y_pred_list[i]))
 
-    return total_loss
+    return total_mse
 
 def get_data():
     indices = np.load(idx_path, allow_pickle=True)['indices']
