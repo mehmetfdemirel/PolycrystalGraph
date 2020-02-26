@@ -198,7 +198,7 @@ def macro_avg_err(Y_prime, Y):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--max_node_num', type=int, default=737)
+    parser.add_argument('--max_node_num', type=int, default=300)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
     parser.add_argument('--latent_dim', type=int, default=100)
     parser.add_argument('--epochs', type=int, default=500)
