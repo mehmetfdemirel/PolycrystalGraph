@@ -97,7 +97,6 @@ class GraphModel(nn.Module):
 
 
 def train(model, data_loader):
-    criterion = nn.MSELoss()
     model.train()
 
     print()
@@ -134,7 +133,7 @@ def train(model, data_loader):
         total_mse_loss = np.mean(total_mse_loss)
         scheduler.step(total_mse_loss)
         train_end_time = time.time()
-        test_loss_epoch = test(model, test_dataloader, 'Test', False)
+        _, test_loss_epoch = test(model, test_dataloader, 'Test', False)
         print('Train time: {:.3f}s. Training MSE is {}. Test MSE is {}'.format(train_end_time - train_start_time,
                                                                                  total_mse_loss, test_loss_epoch))
 
@@ -162,8 +161,8 @@ def test(model, data_loader, test_or_tr, printcond):
     y_label_list = np.array(y_label_list) * label_std + label_mean
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
 
-    #total_loss = macro_avg_err(y_pred_list, y_label_list)
-    total_mse = mse(y_pred_list, y_label_list)
+    total_loss = macro_avg_err(y_pred_list, y_label_list)
+    total_mse = criterion(torch.from_numpy(y_pred_list), torch.from_numpy(y_label_list)).item()
 
     length, w = np.shape(y_label_list)
     if printcond:
@@ -172,7 +171,7 @@ def test(model, data_loader, test_or_tr, printcond):
         for i in range(0, length):
             print('True:{}, Predicted: {}'.format(y_label_list[i], y_pred_list[i]))
 
-    return total_mse
+    return total_loss, total_mse
 
 def get_data():
     indices = np.load(idx_path, allow_pickle=True)['indices']
@@ -232,6 +231,7 @@ if __name__ == '__main__':
     optimizer = optim.Adam(model.parameters(), lr=given_args.learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20,
                                                      min_lr=given_args.min_learning_rate, verbose=True)
+    criterion = nn.MSELoss()
 
     # get the data
     train_dataloader, test_dataloader = get_data()
@@ -240,12 +240,14 @@ if __name__ == '__main__':
     train(model, train_dataloader)
 
     # predictions on the entire training and test datasets
-    train_loss = test(model, train_dataloader, 'Training', True)
-    test_loss = test(model, test_dataloader, 'Test', True)
+    train_rel, train_mse = test(model, train_dataloader, 'Training', True)
+    test_rel, test_mse = test(model, test_dataloader, 'Test', True)
 
     print()
     print('--------------------')
     print()
-    print("Test Error: {}".format(test_loss))
-    print("Training Error: {}".format(train_loss))
+    print("Training Relative Error: {}%".format(100 * train_rel))
+    print("Test Relative Error: {}%".format(100 * test_rel))
+    print("Training MSE: {}".format(train_mse))
+    print("Test MSE: {}".format(test_mse))
 
