@@ -139,7 +139,6 @@ def train(model, data_loader):
                                                                                  total_mse_loss, test_loss_epoch))
 
 def test(model, data_loader, test_or_tr, printcond):
-    criterion = nn.MSELoss()
     model.eval()
     if data_loader is None:
         return None, None
@@ -163,8 +162,8 @@ def test(model, data_loader, test_or_tr, printcond):
     y_label_list = np.array(y_label_list) * label_std + label_mean
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
 
-    total_loss = macro_avg_err(y_pred_list, y_label_list)
-    total_mse = criterion(y_pred_list, y_label_list)
+    #total_loss = macro_avg_err(y_pred_list, y_label_list)
+    total_mse = mse(y_pred_list, y_label_list)
 
     length, w = np.shape(y_label_list)
     if printcond:
