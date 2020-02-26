@@ -163,7 +163,7 @@ def test(model, data_loader, test_or_tr, printcond):
     y_pred_list = np.array(y_pred_list) * label_std + label_mean
 
     total_loss = macro_avg_err(y_pred_list, y_label_list)
-    total_mse = criterion(y_pred_list, y_label_list))
+    total_mse = criterion(y_pred_list, y_label_list)
 
     length, w = np.shape(y_label_list)
     if printcond:
