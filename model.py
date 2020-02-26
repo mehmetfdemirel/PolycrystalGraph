@@ -243,12 +243,6 @@ if __name__ == '__main__':
     train_loss = test(model, train_dataloader, 'Training', True)
     test_loss = test(model, test_dataloader, 'Test', True)
 
-    ig = IntegratedGradients(model)
-
-    # attributions, approximation_error = ig.attribute((input1, input2),
-    #                                                  method='gausslegendre',
-    #                                                  return_convergence_delta=True)
-
     print()
     print('--------------------')
     print()
