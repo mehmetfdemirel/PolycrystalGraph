@@ -209,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='checkpoints/')
     parser.add_argument('--running_index', type=int, default=0)
     parser.add_argument('--folds', type=int, default=10)
-    parser.add_argument('--idx_path', type=str, default='data/indices.npz')
+    parser.add_argument('--idx_path', type=str, default='refined_data/indices.npz')
     given_args = parser.parse_args()
     epochs = given_args.epochs
     max_node_num = given_args.max_node_num
