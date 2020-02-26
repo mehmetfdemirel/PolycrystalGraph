@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--folds', type=int, default=10)
     given_args = parser.parse_args()
     num_folds = given_args.folds
-    out_file_path = 'refined_data/indices.npz'
+    out_file_path = 'data/indices.npz'
 
     print("Output File Path: {}".format(out_file_path))
 
