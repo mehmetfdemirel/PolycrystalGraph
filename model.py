@@ -246,8 +246,8 @@ if __name__ == '__main__':
     print()
     print('--------------------')
     print()
-    print("Training Relative Error: {}%".format(100 * train_rel))
-    print("Test Relative Error: {}%".format(100 * test_rel))
-    print("Training MSE: {}".format(train_mse))
-    print("Test MSE: {}".format(test_mse))
+    print("Training Relative Error: {:.3f}%".format(100 * train_rel))
+    print("Test Relative Error: {:.3f}%".format(100 * test_rel))
+    print("Training MSE: {:.6f}".format(train_mse))
+    print("Test MSE: {:.6f}".format(test_mse))
 
