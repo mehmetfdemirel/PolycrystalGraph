@@ -18,6 +18,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from train_data import GraphDataSet
+from captum.attr import IntegratedGradients
 
 def tensor_to_variable(x):
     if torch.cuda.is_available():
@@ -208,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='checkpoints/')
     parser.add_argument('--running_index', type=int, default=0)
     parser.add_argument('--folds', type=int, default=10)
-    parser.add_argument('--idx_path', type=str, default='data/indices.npz')
+    parser.add_argument('--idx_path', type=str, default='refined_data/indices.npz')
     given_args = parser.parse_args()
     epochs = given_args.epochs
     max_node_num = given_args.max_node_num
@@ -238,9 +239,15 @@ if __name__ == '__main__':
     # train the mode
     train(model, train_dataloader)
 
-    # predictions on the entire test and training datasets
-    test_loss = test(model, test_dataloader, 'Test', True)
+    # predictions on the entire training and test datasets
     train_loss = test(model, train_dataloader, 'Training', True)
+    test_loss = test(model, test_dataloader, 'Test', True)
+
+    ig = IntegratedGradients(model)
+
+    # attributions, approximation_error = ig.attribute((input1, input2),
+    #                                                  method='gausslegendre',
+    #                                                  return_convergence_delta=True)
 
     print()
     print('--------------------')
