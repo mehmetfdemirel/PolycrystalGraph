@@ -18,7 +18,6 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from train_data import GraphDataSet
-from captum.attr import IntegratedGradients
 
 def tensor_to_variable(x):
     if torch.cuda.is_available():
