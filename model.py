@@ -139,6 +139,7 @@ def train(model, data_loader):
                                                                                  total_mse_loss, test_loss_epoch))
 
 def test(model, data_loader, test_or_tr, printcond):
+    criterion = nn.MSELoss()
     model.eval()
     if data_loader is None:
         return None, None
