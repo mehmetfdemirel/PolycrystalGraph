@@ -70,7 +70,7 @@ class GraphDataSet(Dataset):
         label_matrix = (label_matrix - label_mean) / label_std
 
         norm = np.array([label_mean, label_std])
-        np.savez_compressed('data/norm.npz', norm=norm)
+        np.savez_compressed('refined_data/norm.npz', norm=norm)
 
         self.adjacency_matrix = np.array(adjacency_matrix)
         self.node_attr_matrix = np.array(node_attr_matrix)
