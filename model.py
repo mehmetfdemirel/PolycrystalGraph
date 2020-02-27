@@ -200,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_node_num', type=int, default=300)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
     parser.add_argument('--latent_dim', type=int, default=100)
-    parser.add_argument('--epochs', type=int, default=500)
+    parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--min_learning_rate', type=float, default=1e-5)
@@ -248,6 +248,6 @@ if __name__ == '__main__':
     print()
     print("Training Relative Error: {:.3f}%".format(100 * train_rel))
     print("Test Relative Error: {:.3f}%".format(100 * test_rel))
-    print("Training MSE: {:.6f}".format(train_mse))
-    print("Test MSE: {:.6f}".format(test_mse))
+    print("Training MSE: {}".format(train_mse))
+    print("Test MSE: {}".format(test_mse))
 
