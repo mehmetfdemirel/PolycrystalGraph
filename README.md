@@ -12,7 +12,7 @@ conda activate matscienv
 
 ### 2.1. Data Split
 ```
-python split_validation
+python split_validation.py
 ```
 
 ### 2.2. Training
