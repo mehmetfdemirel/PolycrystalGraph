@@ -1,6 +1,6 @@
 # Graph Neural Networks for an Accurate and Interpretable Prediction of the Properties of Polycrystalline Materials 
 
-This repo contains the code base for the paper **"Graph Neural Networks for an Accurate and Interpretable Prediction of the Properties of Polycrystalline Materials"** by Minyi Dai, Mehmet F. Demirel, Yingyu Liang, Jiamian Hu.
+This repo contains the code base for the paper ***"Graph Neural Networks for an Accurate and Interpretable Prediction of the Properties of Polycrystalline Materials"*** by [Minyi Dai](https://mesomod.weebly.com/people.html), [Mehmet F. Demirel](https://cs.wisc.edu/~demirel), [Yingyu Liang](https://cs.wisc.edu/~yliang), [Jiamian Hu](https://mesomod.weebly.com/people.html).
 
 ## Microstructure-property dataset for polycrystalline materials
 We use [Dream.3D](http://dream3d.bluequartz.net/) to generate 492 different 3D polycrystalline microstructures. The number of grains in each microstructure varies from 12 to 297 grains. Microstructures with and without strong textures are both generated (see examples below). For each microstructure, we performed phase-field modeling to obtain the 3D distributions of local magnetization and the associated local magnetostriction induced by a magnetic field applied along the x-axis. Four or five different magnetic fields are applied to each microstructure, amounting to 2287 data points.
