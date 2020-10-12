@@ -40,6 +40,6 @@ python modelcv.py --epoch=<num_of_epochs> \
 		  --latent_dim=<latent dimension between the two layers of the GNN> \
 		  --max_node_num=<maximum number of nodes in a graph in the entire dataset>
 ```
-#### 2.3. Alternative choice: 
+#### 2.3. Alternative choice
 Run `GNN_interpretation.ipynb` on Google Colab.
 
