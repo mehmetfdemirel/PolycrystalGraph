@@ -17,7 +17,6 @@ class Message_Passing(nn.Module):
     def forward(self, x, adjacency_matrix):
         neighbor_nodes = torch.bmm(adjacency_matrix, x)
         logging.debug('neighbor message\t', neighbor_nodes.size())
-        x = x + neighbor_nodes
         logging.debug('x shape\t', x.size())
         return x
 
@@ -41,11 +40,9 @@ class GraphModel(nn.Module):
         self.fully_connected = nn.Sequential(
             nn.Linear(self.max_node_num * self.latent_dim + 1, 1024),
             nn.ReLU(),
-            nn.Linear(1024, 256),
+            nn.Linear(1024, 128),
             nn.ReLU(),
-            nn.Linear(256, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1)
+            nn.Linear(128, 1)
         )
 
         return
@@ -107,7 +104,6 @@ def train(model, data_loader):
 
         #total_macro_loss = np.mean(total_macro_loss)
         total_mse_loss = np.mean(total_mse_loss)
-        scheduler.step(total_mse_loss)
         train_end_time = time.time()
         _, test_loss_epoch = test(model, test_dataloader, 'Test', False)
         print('Train time: {:.3f}s. Training MSE is {}. Test MSE is {}'.format(train_end_time - train_start_time,
@@ -187,8 +183,6 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=given_args.learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20,
-                                                     min_lr=given_args.min_learning_rate, verbose=True)
     criterion = nn.MSELoss()
 
     # get the data
