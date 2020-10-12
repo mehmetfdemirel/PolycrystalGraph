@@ -3,34 +3,15 @@ from __future__ import print_function
 import argparse
 import time
 from collections import OrderedDict
-import logging
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 import os
 import numpy as np
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 import torch.optim as optim
-from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
-from train_data import GraphDataSet
-
-def tensor_to_variable(x):
-    if torch.cuda.is_available():
-        x = x.cuda()
-    return Variable(x.float())
-
-
-def variable_to_numpy(x):
-    if torch.cuda.is_available():
-        x = x.cpu()
-    x = x.data.numpy()
-    return x
-
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+from util import *
 
 class Message_Passing(nn.Module):
     def forward(self, x, adjacency_matrix):
@@ -40,7 +21,6 @@ class Message_Passing(nn.Module):
         logging.debug('x shape\t', x.size())
         return x
 
-
 class GraphModel(nn.Module):
     def __init__(self, max_node_num, atom_attr_dim, latent_dim):
         super(GraphModel, self).__init__()
@@ -48,7 +28,6 @@ class GraphModel(nn.Module):
         self.max_node_num = max_node_num
         self.atom_attr_dim = atom_attr_dim
         self.latent_dim = latent_dim
-
 
         self.graph_modules = nn.Sequential(OrderedDict([
             ('message_passing_0', Message_Passing()),
@@ -91,10 +70,8 @@ class GraphModel(nn.Module):
 
         # Concatenate [x, t]
         x = torch.cat((x, t_matrix), 1)
-
         x = self.fully_connected(x)
         return x
-
 
 def train(model, data_loader):
     print()
@@ -128,7 +105,7 @@ def train(model, data_loader):
             loss.backward()
             optimizer.step()
 
-        total_macro_loss = np.mean(total_macro_loss)
+        #total_macro_loss = np.mean(total_macro_loss)
         total_mse_loss = np.mean(total_mse_loss)
         scheduler.step(total_mse_loss)
         train_end_time = time.time()
@@ -163,44 +140,18 @@ def test(model, data_loader, test_or_tr, printcond):
     total_loss = macro_avg_err(y_pred_list, y_label_list)
     total_mse = criterion(torch.from_numpy(y_pred_list), torch.from_numpy(y_label_list)).item()
 
-    length, w = np.shape(y_label_list)
     if printcond:
-        print()
-        print('{} Set Predictions: '.format(test_or_tr))
-        for i in range(0, length):
-            print('True:{}, Predicted: {}'.format(y_label_list[i], y_pred_list[i]))
+        print_preds(y_label_list, y_pred_list, test_or_tr)
 
     return total_loss, total_mse
-
-def get_data():
-    indices = np.load(idx_path, allow_pickle=True)['indices']
-    test_idx = indices[running_index]
-    train_idx = indices[[i for i in range(folds) if i != running_index]]
-    train_idx = [item for sublist in train_idx for item in sublist]
-
-    dataset = GraphDataSet()
-    train_data = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
-                                                   sampler=SubsetRandomSampler(train_idx))
-    test_data = torch.utils.data.DataLoader(dataset, batch_size=given_args.batch_size,
-                                                  sampler=SubsetRandomSampler(test_idx))
-
-    return train_data, test_data
-
-def mse(Y_prime, Y):
-    return np.mean((Y_prime - Y) ** 2)
-
-def macro_avg_err(Y_prime, Y):
-    if type(Y_prime) is np.ndarray:
-        return np.abs(np.sum((Y - Y_prime)) / np.sum(Y))
-    return torch.abs(torch.sum(Y - Y_prime) / torch.sum(Y))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--max_node_num', type=int, default=300)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
-    parser.add_argument('--latent_dim', type=int, default=100)
-    parser.add_argument('--epochs', type=int, default=500)
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--latent_dim', type=int, default=5)
+    parser.add_argument('--epochs', type=int, default=1000)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--min_learning_rate', type=float, default=1e-5)
     parser.add_argument('--seed', type=int, default=123)
@@ -208,6 +159,7 @@ if __name__ == '__main__':
     parser.add_argument('--running_index', type=int, default=0)
     parser.add_argument('--folds', type=int, default=10)
     parser.add_argument('--idx_path', type=str, default='data/indices.npz')
+
     given_args = parser.parse_args()
     epochs = given_args.epochs
     max_node_num = given_args.max_node_num
@@ -217,11 +169,18 @@ if __name__ == '__main__':
     running_index = given_args.running_index
     idx_path = given_args.idx_path
     folds = given_args.folds
+    batch_size = given_args.batch_size
 
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
 
+    os.environ['PYTHONHASHargs.seed'] = str(given_args.seed)
+    np.random.seed(given_args.seed)
     torch.manual_seed(given_args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(given_args.seed)
+        torch.cuda.manual_seed_all(given_args.seed)
+    torch.backends.cudnn.deterministic = True
 
     # Define the model
     model = GraphModel(max_node_num=max_node_num, atom_attr_dim=atom_attr_dim, latent_dim=latent_dim)
@@ -233,7 +192,7 @@ if __name__ == '__main__':
     criterion = nn.MSELoss()
 
     # get the data
-    train_dataloader, test_dataloader = get_data()
+    train_dataloader, test_dataloader = get_data(idx_path, running_index, folds, batch_size)
 
     # train the mode
     train(model, train_dataloader)
