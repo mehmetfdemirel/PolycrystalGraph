@@ -1,6 +1,6 @@
-# Polygrain Microstructure Property Prediction Project w/ [Mesoscale Computational Modeling Research Group](https://mesomod.weebly.com/datasets.html)
+# Graph Neural Networks for an Accurate and Interpretable Prediction of the Properties of Polycrystalline Materials 
 
-This repo contains the microstructure-property dataset and code base for the graph neural network-based polygrain microstructure property prediction project.
+This repo contains the code base for the paper *"Graph Neural Networks for an Accurate and Interpretable Prediction of the Properties of Polycrystalline Materials"*.
 
 ## Microstructure-property dataset for polycrystalline materials
 We use [Dream.3D](http://dream3d.bluequartz.net/) to generate 492 different 3D polycrystalline microstructures. The number of grains in each microstructure varies from 12 to 297 grains. Microstructures with and without strong textures are both generated (see examples below). For each microstructure, we performed phase-field modeling to obtain the 3D distributions of local magnetization and the associated local magnetostriction induced by a magnetic field applied along the x-axis. Four or five different magnetic fields are applied to each microstructure, amounting to 2287 data points.
@@ -8,10 +8,16 @@ We use [Dream.3D](http://dream3d.bluequartz.net/) to generate 492 different 3D p
 
 ## Run machine learning code
 
-### 1. Setting up environment
+### 0. Download the data
+
+```
+bash download_data.sh
+```
+
+### 1. Setting up Conda environment
 ```
 conda env create -f env.yml
-conda activate matscienv
+conda activate micstrenv
 ```
 
 ### 2. Running the code
@@ -34,5 +40,6 @@ python modelcv.py --epoch=<num_of_epochs> \
 		  --latent_dim=<latent dimension between the two layers of the GNN> \
 		  --max_node_num=<maximum number of nodes in a graph in the entire dataset>
 ```
-### 3. Other choice: run GNN_interpretation.ipynb on Google Colab
+#### 2.3. Alternative choice: 
+Run `GNN_interpretation.ipynb` on Google Colab.
 
