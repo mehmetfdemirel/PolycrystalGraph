@@ -21,29 +21,29 @@ amounting to 2287 data points.
 
 ## Run machine learning code
 
-### 0. Download the data
-
-```
-bash download_data.sh
-```
-
 ### 1. Set up Conda environment
 ```
 conda env create -f env.yml
 conda activate micstrenv
 ```
 
-### 2. Run the code
+### 2. Download the data
 
-#### 2.1. Split data for cross validation
+```
+bash download_data.sh
+```
+
+### 3. Run the code
+
+#### 3.1. Split data for cross validation
 ```
 python split.py
 ```
 
-#### 2.2. Train the model
+#### 3.2. Train the model
 Run  
 ```
 bash run.sh
 ```
-##### 2.2.1. Alternative choice for training
+##### 3.2.1. Alternative choice for training
 Run `GNN_interpretation.ipynb` on Google Colab.
