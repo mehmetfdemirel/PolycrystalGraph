@@ -34,4 +34,3 @@ bash run.sh
 ```
 ##### 2.2.1. Alternative choice for training
 Run `GNN_interpretation.ipynb` on Google Colab.
-
