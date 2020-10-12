@@ -97,13 +97,12 @@ class GraphModel(nn.Module):
 
 
 def train(model, data_loader):
-    model.train()
-
     print()
     print("*** Training started! ***")
     print()
 
     for epoch in range(epochs):
+        model.train()
         total_macro_loss = []
         total_mse_loss = []
         if epoch % (epochs / 10) == 0 or epoch == epochs-1:
