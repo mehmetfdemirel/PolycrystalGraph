@@ -12,12 +12,12 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 from util import *
+from data import *
 
 class Message_Passing(nn.Module):
     def forward(self, x, adjacency_matrix):
         neighbor_nodes = torch.bmm(adjacency_matrix, x)
         logging.debug('neighbor message\t', neighbor_nodes.size())
-        x = x + neighbor_nodes
         logging.debug('x shape\t', x.size())
         return x
 
@@ -105,7 +105,6 @@ def train(model, data_loader):
 
         #total_macro_loss = np.mean(total_macro_loss)
         total_mse_loss = np.mean(total_mse_loss)
-        scheduler.step(total_mse_loss)
         train_end_time = time.time()
         _, test_loss_epoch = test(model, test_dataloader, 'Test', False)
         print('Train time: {:.3f}s. Training MSE is {}. Test MSE is {}'.format(train_end_time - train_start_time,
@@ -147,6 +146,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--max_node_num', type=int, default=300)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
+    parser.add_argument('--num_graphs', type=int, default=492)
     parser.add_argument('--latent_dim', type=int, default=5)
     parser.add_argument('--epochs', type=int, default=1000)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -162,6 +162,7 @@ if __name__ == '__main__':
     epochs = given_args.epochs
     max_node_num = given_args.max_node_num
     atom_attr_dim = given_args.atom_attr_dim
+    num_graphs = given_args.num_graphs
     latent_dim = given_args.latent_dim
     checkpoint_dir = given_args.checkpoint
     running_index = given_args.running_index
@@ -185,12 +186,16 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=given_args.learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20,
-                                                     min_lr=given_args.min_learning_rate, verbose=True)
     criterion = nn.MSELoss()
 
     # get the data
-    train_dataloader, test_dataloader = get_data(idx_path, running_index, folds, batch_size)
+    train_dataloader, test_dataloader = get_data(idx_path,
+                                                 running_index,
+                                                 folds,
+                                                 batch_size,
+                                                 max_node_num,
+                                                 num_graphs,
+                                                 atom_attr_dim)
 
     # train the mode
     train(model, train_dataloader)
