@@ -12,6 +12,7 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 from util import *
+from data import *
 
 class Message_Passing(nn.Module):
     def forward(self, x, adjacency_matrix):
