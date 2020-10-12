@@ -8,11 +8,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 class GraphDataSet(Dataset):
-    def __init__(self):
-        max_node = 300  # max number of grains/nodes for microstructures in the dataset
-        features = 5  # number of features of each grain/node
-
-        for i in range(1, 493):  # 493 = number of graphs + 1
+    def __init__(self, max_node, num_graphs, num_features):
+        for i in range(1, num_graphs + 1):
             # load files
             file_paths = ['data/structure-{}/neighbor.txt'.format(i), 'data/structure-{}/feature.txt'.format(i),
                           'data/structure-{}/property.txt'.format(i)]
@@ -20,7 +17,7 @@ class GraphDataSet(Dataset):
             graph_elements = [np.loadtxt(file_paths[0]), np.loadtxt(file_paths[1]), np.loadtxt(file_paths[2])]
 
             # feature data manipulation
-            graph_elements[1] = manipulate_feature(graph_elements[1], max_node, features)
+            graph_elements[1] = manipulate_feature(graph_elements[1], max_node, num_features)
 
             # normalize the adjacency matrix
             graph_elements[0] = normalize_adj(graph_elements[0], max_node)
@@ -124,13 +121,13 @@ def normalize_t_label(t_matrix, label_matrix):
     return t_matrix, label_matrix
 
 
-def get_data(idx_path, running_index, folds, batch_size):
+def get_data(idx_path, running_index, folds, batch_size, max_node, num_features, num_graphs):
     indices = np.load(idx_path, allow_pickle=True)['indices']
     test_idx = indices[running_index]
     train_idx = indices[[i for i in range(folds) if i != running_index]]
     train_idx = [item for sublist in train_idx for item in sublist]
 
-    dataset = GraphDataSet()
+    dataset = GraphDataSet(max_node, num_features, num_graphs)
     train_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_idx))
     test_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(test_idx))
     return train_data, test_data

@@ -146,6 +146,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--max_node_num', type=int, default=300)
     parser.add_argument('--atom_attr_dim', type=int, default=5)
+    parser.add_argument('--num_graphs', type=int, default=492)
     parser.add_argument('--latent_dim', type=int, default=5)
     parser.add_argument('--epochs', type=int, default=1000)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -161,6 +162,7 @@ if __name__ == '__main__':
     epochs = given_args.epochs
     max_node_num = given_args.max_node_num
     atom_attr_dim = given_args.atom_attr_dim
+    num_graphs = given_args.num_graphs
     latent_dim = given_args.latent_dim
     checkpoint_dir = given_args.checkpoint
     running_index = given_args.running_index
@@ -187,7 +189,13 @@ if __name__ == '__main__':
     criterion = nn.MSELoss()
 
     # get the data
-    train_dataloader, test_dataloader = get_data(idx_path, running_index, folds, batch_size)
+    train_dataloader, test_dataloader = get_data(idx_path,
+                                                 running_index,
+                                                 folds,
+                                                 batch_size,
+                                                 max_node_num,
+                                                 num_graphs,
+                                                 atom_attr_dim)
 
     # train the mode
     train(model, train_dataloader)
