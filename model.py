@@ -41,11 +41,9 @@ class GraphModel(nn.Module):
         self.fully_connected = nn.Sequential(
             nn.Linear(self.max_node_num * self.latent_dim + 1, 1024),
             nn.ReLU(),
-            nn.Linear(1024, 256),
+            nn.Linear(1024, 128),
             nn.ReLU(),
-            nn.Linear(256, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1)
+            nn.Linear(128, 1)
         )
 
         return
