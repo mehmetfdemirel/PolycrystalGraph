@@ -3,8 +3,8 @@
 This repo contains the code base for the paper ***"Graph Neural Networks for an Accurate
 and Interpretable Prediction of the Properties of Polycrystalline Materials"*** 
 by [Minyi Dai](https://www.linkedin.com/in/minyi-dai-7bb82b197/), 
-[Mehmet F. Demirel](https://pages.cs.wisc.edu/~demirel), 
-[Yingyu Liang](https://pages.cs.wisc.edu/~yliang), 
+[Mehmet F. Demirel](http://cs.wisc.edu/~demirel), 
+[Yingyu Liang](http://cs.wisc.edu/~yliang), 
 [Jiamian Hu](https://mesomod.weebly.com/people.html).
 
 ## Microstructure-property dataset for polycrystalline materials
