@@ -3,9 +3,10 @@
 This repo contains the microstructure-property dataset and code base for the graph neural network-based polygrain microstructure property prediction project.
 
 ## Microstructure-property dataset for polycrystalline materials
-We use [Dream.3D](http://dream3d.bluequartz.net/) to generate 492 different 3D polycrystalline microstructures. The number of grains in each microstructure varies from 12 to 297 grains. Microstructures with and without strong textures are both generated. For each microstructure, we performed phase-field modeling to obtain the 3D distributions of local magnetization and the associated local magnetostriction induced by a magnetic field applied along the x-axis. Four or five different magnetic fields are applied to each microstructure, amounting to 2287 data points.
+We use [Dream.3D](http://dream3d.bluequartz.net/) to generate 492 different 3D polycrystalline microstructures. The number of grains in each microstructure varies from 12 to 297 grains. Microstructures with and without strong textures are both generated (see examples below). For each microstructure, we performed phase-field modeling to obtain the 3D distributions of local magnetization and the associated local magnetostriction induced by a magnetic field applied along the x-axis. Four or five different magnetic fields are applied to each microstructure, amounting to 2287 data points.
+![alt text](https://github.com/mehmetfdemirel/microstructure/blob/master/microstructure.png)
 
-## Run machine learning code on server
+## Run machine learning code
 
 ### 1. Setting up environment
 ```
@@ -33,6 +34,5 @@ python modelcv.py --epoch=<num_of_epochs> \
 		  --latent_dim=<latent dimension between the two layers of the GNN> \
 		  --max_node_num=<maximum number of nodes in a graph in the entire dataset>
 ```
-## Run machine learning code on Google Colab
-### 1. open the notebook GNN_interpretation.ipynb
+### 3. Other choice: run GNN_interpretation.ipynb on Google Colab
 
