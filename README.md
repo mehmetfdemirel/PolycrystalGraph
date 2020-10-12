@@ -24,7 +24,7 @@ conda activate micstrenv
 
 #### 2.1. Split data for cross validation
 ```
-python split_validation.py
+python split.py
 ```
 
 #### 2.2. Train the model
