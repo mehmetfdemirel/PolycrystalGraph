@@ -26,5 +26,5 @@ def mse(Y_prime, Y):
 
 def macro_avg_err(Y_prime, Y):
     if type(Y_prime) is np.ndarray:
-        return np.abs(np.sum((Y - Y_prime)) / np.sum(Y))
-    return torch.abs(torch.sum(Y - Y_prime) / torch.sum(Y))
+        return np.sum(np.abs(Y - Y_prime)) / np.sum(np.abs(Y))
+    return torch.sum(torch.abs(Y - Y_prime)) / torch.sum(torch.abs(Y))
