@@ -3,8 +3,8 @@ from data import GraphDataSet
 import numpy as np
 from sklearn.model_selection import KFold
 
-def split_data():
-    dataset = GraphDataSet()
+def split_data(num_folds, num_graphs, max_node, num_features):
+    dataset = GraphDataSet(num_graphs, max_node, num_features)
     num_of_data = dataset.__len__()
     kf = KFold(n_splits=num_folds, shuffle=True)
     ind = []
@@ -26,9 +26,13 @@ if __name__ == '__main__':
     out_file_path = 'data/indices.npz'
     np.random.seed(given_args.seed)
 
+    num_graphs = 492
+    max_node = 300
+    num_features = 5
+
     print("Output File Path: {}".format(out_file_path))
 
-    indices = split_data()
+    indices = split_data(num_folds, num_graphs, max_node, num_features)
     extract_graph_data(out_file_path, ind = indices)
 
     print("Data successfully split into {} folds!".format(num_folds))

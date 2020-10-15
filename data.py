@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 class GraphDataSet(Dataset):
-    def __init__(self, max_node, num_graphs, num_features):
+    def __init__(self, num_graphs, max_node, num_features):
         for i in range(1, num_graphs + 1):
             # load files
             file_paths = ['data/structure-{}/neighbor.txt'.format(i), 'data/structure-{}/feature.txt'.format(i),
@@ -127,7 +127,7 @@ def get_data(idx_path, running_index, folds, batch_size, max_node, num_features,
     train_idx = indices[[i for i in range(folds) if i != running_index]]
     train_idx = [item for sublist in train_idx for item in sublist]
 
-    dataset = GraphDataSet(max_node, num_features, num_graphs)
+    dataset = GraphDataSet(num_graphs, max_node, num_features)
     train_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_idx))
     test_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(test_idx))
     return train_data, test_data
