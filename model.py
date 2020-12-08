@@ -194,8 +194,9 @@ if __name__ == '__main__':
                                                  folds,
                                                  batch_size,
                                                  max_node_num,
-                                                 num_graphs,
-                                                 atom_attr_dim)
+                                                 atom_attr_dim,
+                                                 num_graphs
+                                                 )
 
     # train the mode
     train(model, train_dataloader)
