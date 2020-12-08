@@ -3,7 +3,7 @@ from data import GraphDataSet
 import numpy as np
 from sklearn.model_selection import KFold
 
-def split_data(num_folds, num_graphs, max_node, num_features):
+def split_data():
     dataset = GraphDataSet(num_graphs, max_node, num_features)
     num_of_data = dataset.__len__()
     kf = KFold(n_splits=num_folds, shuffle=True)
