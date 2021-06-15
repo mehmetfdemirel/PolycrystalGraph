@@ -1,0 +1,7 @@
+{
+	"lr": 0.0001,
+	"epoch": 1000,
+	"optim": "Adam",
+	"latent_dim1": 5,
+	"latent_dim2": 50
+}
