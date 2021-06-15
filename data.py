@@ -8,11 +8,14 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 class GraphDataSet(Dataset):
-    def __init__(self, num_graphs, max_node, num_features):
-        for i in range(1, num_graphs + 1):
+    def __init__(self, num_data, graph_seq):
+        max_node = 300
+        num_features = 5
+        for i in range(num_data):
+            ind = graph_seq[i]
             # load files
-            file_paths = ['data/structure-{}/neighbor.txt'.format(i), 'data/structure-{}/feature.txt'.format(i),
-                          'data/structure-{}/property.txt'.format(i)]
+            file_paths = ['data/structure-{}/neighbor.txt'.format(ind), 'data/structure-{}/feature.txt'.format(ind),
+                          'data/structure-{}/property.txt'.format(ind)]
 
             graph_elements = [np.loadtxt(file_paths[0]), np.loadtxt(file_paths[1]), np.loadtxt(file_paths[2])]
 
@@ -36,7 +39,7 @@ class GraphDataSet(Dataset):
                                                   [graph_elements[1] for x in range(num_properties)]
 
                 # concatenating the matrices
-            if i == 1:
+            if i == 0:
                 adjacency_matrix, node_attr_matrix, t_matrix, label_matrix = multiple_neighbor, multiple_feature, t, label
             else:
                 adjacency_matrix, node_attr_matrix, t_matrix, label_matrix = np.concatenate((adjacency_matrix, multiple_neighbor)), \
@@ -116,18 +119,21 @@ def normalize_t_label(t_matrix, label_matrix):
 
     # save the mean and standard deviation of label
     norm = np.array([label_mean, label_std])
-    np.savez_compressed('data/norm.npz', norm=norm)
+    np.savez_compressed('norm.npz', norm=norm)
 
     return t_matrix, label_matrix
 
 
-def get_data(idx_path, running_index, folds, batch_size, max_node, num_features, num_graphs):
+def get_data(batch_size, idx_path, validation_index, testing_index, folds, num_data):
     indices = np.load(idx_path, allow_pickle=True)['indices']
-    test_idx = indices[running_index]
-    train_idx = indices[[i for i in range(folds) if i != running_index]]
+    graph_seq = np.load(idx_path, allow_pickle=True)['graph_seq']
+    validation_idx = indices[validation_index]
+    test_idx = indices[testing_index]
+    train_idx = indices[[i for i in range(folds) if i != validation_index and i != testing_index]]
     train_idx = [item for sublist in train_idx for item in sublist]
 
-    dataset = GraphDataSet(num_graphs, max_node, num_features)
+    dataset = GraphDataSet(num_data, graph_seq)
     train_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_idx))
+    validation_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(validation_idx))
     test_data = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(test_idx))
-    return train_data, test_data
+    return train_data, validation_data, test_data

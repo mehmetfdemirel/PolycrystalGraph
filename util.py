@@ -7,6 +7,7 @@ def tensor_to_variable(x):
     if torch.cuda.is_available():
         x = x.cuda()
     return Variable(x.float())
+    #return Variable(x)
 
 def variable_to_numpy(x):
     if torch.cuda.is_available():
