@@ -43,19 +43,22 @@ def Intergrated_gradient_calculation(adajacency_matrix, node_attr_matrix, t_matr
     baseline_t_matrix=torch.zeros((1,tsize[0]))
 
     ##specify baseline: same with input graph except the Euler angles
-    #specify baseline: all zeros
+    ##specify baseline: all zeros
+    #specify baseline: only consider the influence of grain size
     #alpha = 0.5*math.pi
     #beta = 0.5*math.pi
     #gamma = 0.5*math.pi
-    #for i in range(nsize[0]):
+    for i in range(nsize[0]):
     #    if node_attr_matrix[i][0] != 0:
     #        baseline_node_attr_matrix[0][i][0]=alpha
     #    if node_attr_matrix[i][1] != 0:
     #        baseline_node_attr_matrix[0][i][1]=beta
     #    if node_attr_matrix[i][2] != 0:
     #        baseline_node_attr_matrix[0][i][2]=gamma
-    #    baseline_node_attr_matrix[0][i][3]=node_attr_matrix[i][3]
-    #    baseline_node_attr_matrix[0][i][4]=node_attr_matrix[i][4]
+        baseline_node_attr_matrix[0][i][0]=node_attr_matrix[i][0]
+        baseline_node_attr_matrix[0][i][1]=node_attr_matrix[i][1]
+        baseline_node_attr_matrix[0][i][2]=node_attr_matrix[i][2]
+        baseline_node_attr_matrix[0][i][4]=node_attr_matrix[i][4]
 
     for i in range(tsize[0]):
         baseline_t_matrix[0][i]=t_matrix[i]
@@ -108,10 +111,11 @@ if __name__ =='__main__':
     
     for i in range(492):
         Graph = dataset[i]
-        adajacency_matrix, node_attr_matrix, t_matrix = Graph[0], Graph[1], Graph[2]
+        adajacency_matrix, node_attr_matrix, t_matrix, label_matrix = Graph[0], Graph[1], Graph[2], Graph[3]
         grad_node_attr_matrix, grad_t_matrix=Intergrated_gradient_calculation(adajacency_matrix, node_attr_matrix, t_matrix, model,steps=200)
         feature_gradient=grad_node_attr_matrix[0]
         outputnumber=i+1
         savetxt("interpretation/feature_grad_{0}.csv".format(outputnumber), feature_gradient, delimiter=',')
+        savetxt("interpretation/label_{0}.csv".format(outputnumber), label_matrix, delimiter=',')
         savetxt("interpretation/feature_{0}.csv".format(outputnumber),node_attr_matrix,delimiter=',')
     
