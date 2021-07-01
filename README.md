@@ -45,5 +45,7 @@ Run
 ```
 bash run.sh
 ```
-##### 3.2.1. Alternative choice for training
-Run `GNN_interpretation.ipynb` on Google Colab.
+##### 3.3. Get Interpretation results
+```
+python interpretation.py
+```
