@@ -1,7 +1,7 @@
 # Graph Neural Networks for an Accurate and Interpretable Prediction of the Properties of Polycrystalline Materials 
 
-This repo contains the code base for the paper ***"Graph Neural Networks for an Accurate
-and Interpretable Prediction of the Properties of Polycrystalline Materials"*** 
+This repo contains the code base for the paper [***"Graph Neural Networks for an Accurate
+and Interpretable Prediction of the Properties of Polycrystalline Materials"***](https://www.nature.com/articles/s41524-021-00574-w)
 by [Minyi Dai](https://www.linkedin.com/in/minyi-dai-7bb82b197/), 
 [Mehmet F. Demirel](http://cs.wisc.edu/~demirel), 
 [Yingyu Liang](http://cs.wisc.edu/~yliang), 
