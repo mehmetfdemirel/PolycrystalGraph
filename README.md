@@ -7,6 +7,9 @@ by [Minyi Dai](https://www.linkedin.com/in/minyi-dai-7bb82b197/),
 [Yingyu Liang](http://cs.wisc.edu/~yliang), 
 [Jiamian Hu](https://mesomod.weebly.com/people.html).
 
+## Code and paper correction
+We are aware that the message passing between neighboring nodes was not implemented in the layer-wise update function due to an error in the original code of the graph neural network (GNN) model. Thus, we update the code model.py and the optimized hyperparameters in this GitHub page. The changes to the original paper can be found in the [author correction](https://www.nature.com/articles/s41524-022-00804-9).
+
 ## Microstructure-property dataset for polycrystalline materials
 We use [Dream.3D](http://dream3d.bluequartz.net/) 
 to generate 492 different 3D polycrystalline microstructures. 
@@ -49,3 +52,6 @@ bash run.sh
 ```
 python interpretation.py
 ```
+
+
+
