@@ -1,7 +1,7 @@
 {
-	"lr": 1e-05,
-	"epoch": 1000,
+	"lr": 0.0001,
+	"epoch": 1500,
 	"optim": "Adam",
-	"latent_dim1": 20,
-	"latent_dim2": 60
+	"latent_dim1": 7,
+	"latent_dim2": 80
 }
