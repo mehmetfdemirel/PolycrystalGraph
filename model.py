@@ -20,7 +20,7 @@ class Message_Passing(nn.Module):
         neighbor_nodes = torch.bmm(adjacency_matrix, x)
         logging.debug('neighbor message\t', neighbor_nodes.size())
         logging.debug('x shape\t', x.size())
-        return x
+        return neighbor_nodes
 
 class GraphModel(nn.Module):
     def __init__(self, max_node_num, atom_attr_dim, latent_dim1, latent_dim2):
@@ -196,12 +196,14 @@ if __name__ == '__main__':
         os.makedirs(folder_name)
 
     os.environ['PYTHONHASHargs.seed'] = str(given_args.seed)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"]=":4096:8"
     np.random.seed(given_args.seed)
     torch.manual_seed(given_args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(given_args.seed)
         torch.cuda.manual_seed_all(given_args.seed)
     torch.backends.cudnn.deterministic = True
+    torch.use_deterministic_algorithms(True)
     
     filename='hyper/'+str(hyper)+'.json'
     with open(filename,'r') as h:
